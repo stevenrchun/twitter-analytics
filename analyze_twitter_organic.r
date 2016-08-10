@@ -227,7 +227,7 @@ vocabulary <- unlist(data$words, recursive = TRUE)
 freq<-table(vocabulary)
 
 #Engagement Rate
-plot(data$engagement.rate, type = "l", main = "Engagement Rate Over Time", xlab = "Last 208 Tweets (1st is most recent)", ylab = "
+plot(data$engagement.rate, type = "l", main = "Engagement Rate Over Tweets", xlab = "Last 208 Tweets (1st is most recent)", ylab = "
 Engagement Rate (imp/action)")
 tweets <- rep(1:208)
 tweets
@@ -237,10 +237,25 @@ abline(reg, col="blue")
 #Engagement is slightly increasing!
 
 #Impressions
-plot(data$impressions, type= "l", main = "Impressions", xlab="Tweets (1 is most recent)", ylab="Impressions")
+plot(data$impressions, type= "l", main = "Impressions Over Tweets", xlab="Tweets (1 is most recent)", ylab="Impressions")
 impReg <-lm(data$impressions ~tweets)
 impReg
 abline(impReg, col="red")
 
 #Impressions are pretty much static.
 
+#Media
+data$hasMedia <- ifelse(data$media.views>0, 1, 0)
+cor(data$engagement.rate, data$hasMedia)
+#Correlation for having media is .540
+cor(data$engagement.rate, data$hasMedia)
+data$mentionTrump <- ifelse(grepl("Trump", data$Tweet.text), 1, 0)
+cor(data$engagements, data$mentionTrump)
+cor(data$impressions, data$mentionTrump)
+cor(data$retweets, data$mentionTrump)
+data$reference <- ifelse(grepl("@", data$Tweet.text), 1, 0)
+cor(data$impressions, data$reference)
+cor(data$engagements, data$reference)
+cor(data$impressions, data$retweets)
+cor(data$retweets, data$reference)
+#None of these show noticeable correlations.
