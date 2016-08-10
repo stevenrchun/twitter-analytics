@@ -23,6 +23,7 @@ library(reshape)
 library(plyr)
 library(scales)
 
+
 ### CONFIGURATION VARIABLES
 target_time_zone = "America/New_York"
 data_directory = "/Users/stevenchun/twitter-analytics/" # Important: This must end with a /
@@ -38,7 +39,7 @@ x_axis_label_hourly = paste("Time of day (", target_time_zone, ")", sep="")
 x_axis_label_daily = "Day of week"
 
 #IMPORT DATA
-data = read.csv(full_path("twitter_data.csv"))
+data = read.csv(full_path("truman_data.csv"))
 data$time = as.POSIXct(data$time, tz="UTC")
 data$time = format(data$time, tz=target_time_zone)
 data$hour = as.POSIXlt(strftime(data$time, format="%H:%M"), format="%H:%M")$hour
@@ -98,7 +99,7 @@ rt_by_hour = designate_top(rt_by_hour, top_retweet_hours)
 retweet_t  = time_of_day_t(data, "retweets", top_retweet_hours)
 ## 8 and 9 are the best hours
   
-ggplot(rt_by_hour) + geom_bar(aes(hour, average, fill=top), stat="identity")+ xlab(x_axis_label_hourly) + ylab("Retweets per Post") + ggtitle("Best Time of Day to Maximize RT") + theme(panel.grid.major.y = element_line(colour="gray"), panel.grid.minor.x = element_blank(), plot.title = element_text(size= rel(2))) + theme(legend.text = element_text(size = 18), axis.text = element_text(size=24))+ expand_limits(y=0) +  theme(panel.background = element_rect(fill = 'white'), axis.title.y=element_text(size=24)) +  scale_fill_gradient2(low="dodgerblue", high="red", mid="dodgerblue") + theme(legend.position="bottom") +  theme(strip.text.x = element_text(size = 14), strip.background = element_rect(fill='white')) + theme(text=element_text(family="Helvetica", face="bold"))+ annotate("text", x = Inf, y = -Inf, label="Truman Project", hjust=1.1, vjust=-1.1, col="gray", cex=6,fontface = "bold", alpha = 0.8) + theme(legend.position="none")+ scale_x_continuous(breaks=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24), limits=c(1,24))
+ggplot(rt_by_hour) + geom_bar(aes(hour, average, fill=top), stat="identity")+ xlab(x_axis_label_hourly) + ylab("Retweets per Post") + ggtitle("Best Time of Day to Maximize RT") + theme(panel.grid.major.y = element_line(colour="gray"), panel.grid.minor.x = element_blank(), plot.title = element_text(size= rel(2))) + theme(legend.text = element_text(size = 18), axis.text = element_text(size=24))+ expand_limits(y=0) +  theme(panel.background = element_rect(fill = 'white'), axis.title.y=element_text(size=24)) +  scale_fill_gradient2(low="dodgerblue", high="red", mid="dodgerblue") + theme(legend.position="bottom") +  theme(strip.text.x = element_text(size = 14), strip.background = element_rect(fill='white')) + theme(text=element_text(family="Helvetica", face="bold"))+ annotate("text", x = Inf, y = -Inf, label="Truman Project", hjust=1.1, vjust=-1.1, col="gray", cex=6, fontface = "bold", alpha = 0.8) + theme(legend.position="none")+ scale_x_continuous(breaks=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24), limits=c(1,24))
 ggsave(full_path("maximum_retweets_by_timeofday.png"), dpi=300, width=12, height=9)
 
 ## IMPRESSIONS BY HOUR
@@ -213,5 +214,48 @@ cor(data$retweets, data$impressions)
 cor(data$replies, data$impressions)
 data$tweet.length = nchar(as.character(data$Tweet.text[1]))
 
-##Steven's Work
+##Word Count
+Sys.setlocale('LC_ALL','C')
+stripped <- gsub(",", "", data$Tweet.text)
+stripped
+stripped <- gsub("\\.", "", stripped)
+stripped <- gsub(":", "", stripped)
+stripped <- gsub("?", "", stripped)
+stripped <- gsub("!", "", stripped)
+data$words <- strsplit(as.character(stripped), " ")
+vocabulary <- unlist(data$words, recursive = TRUE)
+freq<-table(vocabulary)
 
+#Engagement Rate
+plot(data$engagement.rate, type = "l", main = "Engagement Rate Over Tweets", xlab = "Last 208 Tweets (1st is most recent)", ylab = "
+Engagement Rate (imp/action)")
+tweets <- rep(1:208)
+tweets
+reg<-lm(data$engagement.rate~tweets)
+reg
+abline(reg, col="blue")
+#Engagement is slightly increasing!
+
+#Impressions
+plot(data$impressions, type= "l", main = "Impressions Over Tweets", xlab="Tweets (1 is most recent)", ylab="Impressions")
+impReg <-lm(data$impressions ~tweets)
+impReg
+abline(impReg, col="red")
+
+#Impressions are pretty much static.
+
+#Media
+data$hasMedia <- ifelse(data$media.views>0, 1, 0)
+cor(data$engagement.rate, data$hasMedia)
+#Correlation for having media is .540
+cor(data$engagement.rate, data$hasMedia)
+data$mentionTrump <- ifelse(grepl("Trump", data$Tweet.text), 1, 0)
+cor(data$engagements, data$mentionTrump)
+cor(data$impressions, data$mentionTrump)
+cor(data$retweets, data$mentionTrump)
+data$reference <- ifelse(grepl("@", data$Tweet.text), 1, 0)
+cor(data$impressions, data$reference)
+cor(data$engagements, data$reference)
+cor(data$impressions, data$retweets)
+cor(data$retweets, data$reference)
+#None of these show noticeable correlations.
